@@ -16,21 +16,27 @@ var users = new Users();
 app.use(express.static(publicPath));
 
 io.on('connection', (socket)=>{
+  var rooms = users.getChatRooms();
+  io.emit('getChatRooms', rooms);
   console.log('New user connected');
   socket.on('join', (params, callback)=>{
     if(!isRealString(params.name) || !isRealString(params.room)){
       return callback('Name and room name are required')
     }
+    var userList = users.getUserList(params.room.toLowerCase());
+    if (userList.indexOf(params.name) > -1) {
+      return callback('User Name already exists');
+    }
     //Adding user to a room
-    socket.join(params.room);
+    socket.join(params.room.toLowerCase());
     users.removeUser(socket.id);
-    users.addUser(socket.id, params.name, params.room);
-    io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+    users.addUser(socket.id, params.name, params.room.toLowerCase());
+    io.to(params.room.toLowerCase()).emit('updateUserList', users.getUserList(params.room.toLowerCase()));
     //io.emit ==> Sends message to all Users
     //socket.broadcast.emit ==> Sends message to all Users except for the current one
     //socket.emit ==> Sends message to current user only
     socket.emit('newMessage',generateMessage('Admin','Welcome to chat app'));
-    socket.broadcast.to(params.room).emit('newMessage',generateMessage('Admin', `${params.name} has joined.`));
+    socket.broadcast.to(params.room.toLowerCase()).emit('newMessage',generateMessage('Admin', `${params.name} has joined.`));
 
     callback();
   });

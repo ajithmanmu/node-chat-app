@@ -37,12 +37,21 @@ class Users {
 
   getUser (id) {
     return this.users.filter((user) => user.id === id)[0];
-
   }
+
   getUserList (room) {
     var users = this.users.filter((user) => user.room === room);
     var namesArray = users.map((user) => user.name);
     return namesArray;
+  }
+
+  getChatRooms(){
+    var roomsArray = this.users
+                .map((user) => user.room)
+                .filter(function (item, pos, self) {
+                  return self.indexOf(item) == pos;
+                });
+    return roomsArray;
   }
 }
 
